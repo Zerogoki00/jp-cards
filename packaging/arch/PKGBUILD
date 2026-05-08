@@ -1,0 +1,39 @@
+# Maintainer: Zerogoki00 <ayanami@nerv.un.org>
+pkgname=jp-cards
+pkgver=0.2.0
+pkgrel=1
+pkgdesc="Qt 6 desktop app that turns a CSV vocabulary list into a print-ready PDF of double-sided Japanese flashcards"
+arch=('x86_64')
+url="https://github.com/Zerogoki00/jp-cards"
+license=('GPL-3.0-or-later' 'custom:OFL-1.1')
+depends=('qt6-base' 'qt6-pdf')
+makedepends=('cmake' 'ninja')
+source=(
+    "$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/$pkgver.tar.gz"
+    "NotoSansJP-Regular.otf::https://github.com/notofonts/noto-cjk/raw/main/Sans/SubsetOTF/JP/NotoSansJP-Regular.otf"
+)
+# Run `updpkgsums` after editing pkgver to refresh these.
+sha256sums=('SKIP'
+            'SKIP')
+
+prepare() {
+    # CMake hard-fails without the bundled font; stage it before configure.
+    install -Dm644 "$srcdir/NotoSansJP-Regular.otf" \
+        "$srcdir/$pkgname-$pkgver/resources/fonts/NotoSansJP-Regular.otf"
+}
+
+build() {
+    cd "$pkgname-$pkgver"
+    cmake --preset linux-release \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_BUILD_TYPE=Release
+    cmake --build --preset linux-release
+}
+
+package() {
+    cd "$pkgname-$pkgver"
+    install -Dm755 "build/linux-release/jp-cards" \
+        "$pkgdir/usr/bin/jp-cards"
+    install -Dm644 LICENSE \
+        "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
