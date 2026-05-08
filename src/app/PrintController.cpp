@@ -2,6 +2,7 @@
 
 #include <QAbstractPrintDialog>
 #include <QImage>
+#include <QPageLayout>
 #include <QPageRanges>
 #include <QPainter>
 #include <QPdfDocument>
@@ -84,6 +85,17 @@ bool PrintController::renderToPrinter(QPdfDocument* doc, QPrinter* printer, Mode
     const QPageRanges userRanges = printer->pageRanges();
     const bool filterByMode = !modeRanges.isEmpty();
     const bool filterByUser = !userRanges.isEmpty();
+
+    // Make painter coordinates cover the full page rather than the printer's
+    // printable area. Without this, painter (0,0) is at paintRect.topLeft()
+    // — which on Windows is offset from the physical page origin by the
+    // printer's hardware margins, and our full-page image then prints with
+    // a visible right/bottom shift. FullPageMode aligns the painter with
+    // the page itself; our drawn 10mm margin stays inside the printable
+    // area on any reasonable printer.
+    QPageLayout layout = printer->pageLayout();
+    layout.setMode(QPageLayout::FullPageMode);
+    printer->setPageLayout(layout);
 
     QPainter painter;
     if (!painter.begin(printer)) {
