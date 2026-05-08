@@ -1,0 +1,64 @@
+name: windows-release
+
+on:
+  push:
+    branches: [master]
+    tags: ["v*"]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.8.*"
+          host: windows
+          target: desktop
+          arch: win64_msvc2022_64
+          modules: qtpdf
+          cache: true
+
+      - name: Set up MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Set up Ninja
+        uses: seanmiddleditch/gha-setup-ninja@v5
+
+      - name: Download bundled font
+        shell: pwsh
+        run: |
+          $url = "https://github.com/notofonts/noto-cjk/raw/main/Sans/SubsetOTF/JP/NotoSansJP-Regular.otf"
+          New-Item -ItemType Directory -Force -Path resources/fonts | Out-Null
+          Invoke-WebRequest -Uri $url -OutFile resources/fonts/NotoSansJP-Regular.otf
+
+      - name: Configure
+        run: cmake --preset windows-release
+
+      - name: Build
+        run: cmake --build --preset windows-release
+
+      - name: Stage release artefact
+        shell: pwsh
+        run: |
+          $stage = "stage/jp-cards"
+          New-Item -ItemType Directory -Force -Path $stage | Out-Null
+          Copy-Item build/windows-release/jp-cards.exe $stage/
+          windeployqt.exe --release --no-translations --no-system-d3d-compiler `
+                          --no-opengl-sw "$stage/jp-cards.exe"
+
+      - name: Upload artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: jp-cards-windows-x64
+          path: stage/jp-cards
+          if-no-files-found: error
