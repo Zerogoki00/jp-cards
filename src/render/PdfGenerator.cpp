@@ -161,15 +161,18 @@ PdfGenerator::Result PdfGenerator::generate(const CardDeck& deckIn,
 
     QPdfWriter writer(device);
     writer.setResolution(opts.resolutionDpi);
-    // setPageMargins(0,0,0,0) alone isn't enough — QPdfWriter inherits a
-    // non-zero minimumMargins from the default page layout, which silently
-    // raises requested margins and shifts the painter origin (visible as a
-    // grid shifted to the right/bottom). Build the layout from scratch.
+    // FullPageMode: painter coordinates cover the full media box and
+    // device->width()/height() report the full page, with no implicit
+    // hardware margins on any platform. We do all our own margin maths
+    // afterwards, so this keeps the rendering identical across Linux
+    // (no minimum margins by default) and Windows (non-zero printer
+    // minimum margins, which previously shifted the grid to the right).
     QPageLayout layout(QPageSize(QPageSize::A4),
                        QPageLayout::Portrait,
                        QMarginsF(0, 0, 0, 0),
-                       QPageLayout::Millimeter);
-    layout.setMinimumMargins(QMarginsF(0, 0, 0, 0));
+                       QPageLayout::Millimeter,
+                       QMarginsF(0, 0, 0, 0));
+    layout.setMode(QPageLayout::FullPageMode);
     writer.setPageLayout(layout);
     writer.setTitle(QStringLiteral("Flashcards"));
 
