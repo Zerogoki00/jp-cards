@@ -5,63 +5,78 @@
 class TestCsvLoader : public QObject {
     Q_OBJECT
 private slots:
-    void simpleTwoColumns();
+    void simpleThreeColumns();
+    void emptyFuriganaAllowed();
     void bomStripped();
     void quotedCommaInside();
     void quotedNewlineInside();
     void escapedQuote();
     void emptyRowSkipped();
-    void singleColumnRowWarns();
+    void shortRowWarns();
     void crlfLineEndings();
     void emptyFileError();
     void utf8Cjk();
 };
 
-void TestCsvLoader::simpleTwoColumns() {
-    auto r = CsvLoader::loadBytes("front1,back1\nfront2,back2\n");
+void TestCsvLoader::simpleThreeColumns() {
+    auto r = CsvLoader::loadBytes("word1,furi1,trans1\nword2,furi2,trans2\n");
     QVERIFY(r.ok());
     QCOMPARE(r.deck.size(), 2);
-    QCOMPARE(r.deck.cards()[0].front, QStringLiteral("front1"));
-    QCOMPARE(r.deck.cards()[1].back,  QStringLiteral("back2"));
+    QCOMPARE(r.deck.cards()[0].word,        QStringLiteral("word1"));
+    QCOMPARE(r.deck.cards()[0].furigana,    QStringLiteral("furi1"));
+    QCOMPARE(r.deck.cards()[0].translation, QStringLiteral("trans1"));
+    QCOMPARE(r.deck.cards()[1].translation, QStringLiteral("trans2"));
+    QVERIFY(r.warnings.isEmpty());
+}
+
+void TestCsvLoader::emptyFuriganaAllowed() {
+    auto r = CsvLoader::loadBytes("あふれる,,Перелив\n");
+    QVERIFY(r.ok());
+    QCOMPARE(r.deck.size(), 1);
+    QCOMPARE(r.deck.cards()[0].furigana, QString());
+    QCOMPARE(r.deck.cards()[0].word,
+             QString::fromUtf8("あふれる"));
+    QCOMPARE(r.deck.cards()[0].translation,
+             QString::fromUtf8("Перелив"));
     QVERIFY(r.warnings.isEmpty());
 }
 
 void TestCsvLoader::bomStripped() {
-    QByteArray data = QByteArray::fromHex("EFBBBF") + "a,b\n";
+    QByteArray data = QByteArray::fromHex("EFBBBF") + "a,b,c\n";
     auto r = CsvLoader::loadBytes(data);
     QVERIFY(r.ok());
     QCOMPARE(r.deck.size(), 1);
-    QCOMPARE(r.deck.cards()[0].front, QStringLiteral("a"));
+    QCOMPARE(r.deck.cards()[0].word, QStringLiteral("a"));
 }
 
 void TestCsvLoader::quotedCommaInside() {
-    auto r = CsvLoader::loadBytes("\"a,b\",c\n");
+    auto r = CsvLoader::loadBytes("word,furi,\"trans, with comma\"\n");
     QVERIFY(r.ok());
-    QCOMPARE(r.deck.cards()[0].front, QStringLiteral("a,b"));
-    QCOMPARE(r.deck.cards()[0].back,  QStringLiteral("c"));
+    QCOMPARE(r.deck.cards()[0].translation,
+             QStringLiteral("trans, with comma"));
 }
 
 void TestCsvLoader::quotedNewlineInside() {
-    auto r = CsvLoader::loadBytes("\"line1\nline2\",back\n");
+    auto r = CsvLoader::loadBytes("word,furi,\"line1\nline2\"\n");
     QVERIFY(r.ok());
     QCOMPARE(r.deck.size(), 1);
-    QCOMPARE(r.deck.cards()[0].front, QStringLiteral("line1\nline2"));
+    QCOMPARE(r.deck.cards()[0].translation, QStringLiteral("line1\nline2"));
 }
 
 void TestCsvLoader::escapedQuote() {
-    auto r = CsvLoader::loadBytes("\"she said \"\"hi\"\"\",ok\n");
+    auto r = CsvLoader::loadBytes("word,furi,\"she said \"\"hi\"\"\"\n");
     QVERIFY(r.ok());
-    QCOMPARE(r.deck.cards()[0].front, QStringLiteral("she said \"hi\""));
+    QCOMPARE(r.deck.cards()[0].translation, QStringLiteral("she said \"hi\""));
 }
 
 void TestCsvLoader::emptyRowSkipped() {
-    auto r = CsvLoader::loadBytes("a,b\n\n\nc,d\n");
+    auto r = CsvLoader::loadBytes("a,b,c\n\n\nd,e,f\n");
     QVERIFY(r.ok());
     QCOMPARE(r.deck.size(), 2);
 }
 
-void TestCsvLoader::singleColumnRowWarns() {
-    auto r = CsvLoader::loadBytes("a,b\nlonelyfield\nc,d\n");
+void TestCsvLoader::shortRowWarns() {
+    auto r = CsvLoader::loadBytes("a,b,c\nlonelyfield\nd,e,f\n");
     QVERIFY(r.ok());
     QCOMPARE(r.deck.size(), 2);
     QCOMPARE(r.warnings.size(), 1);
@@ -69,10 +84,10 @@ void TestCsvLoader::singleColumnRowWarns() {
 }
 
 void TestCsvLoader::crlfLineEndings() {
-    auto r = CsvLoader::loadBytes("a,b\r\nc,d\r\n");
+    auto r = CsvLoader::loadBytes("a,b,c\r\nd,e,f\r\n");
     QVERIFY(r.ok());
     QCOMPARE(r.deck.size(), 2);
-    QCOMPARE(r.deck.cards()[1].front, QStringLiteral("c"));
+    QCOMPARE(r.deck.cards()[1].word, QStringLiteral("d"));
 }
 
 void TestCsvLoader::emptyFileError() {
@@ -82,10 +97,12 @@ void TestCsvLoader::emptyFileError() {
 }
 
 void TestCsvLoader::utf8Cjk() {
-    auto r = CsvLoader::loadBytes(QString::fromUtf8("宴会,банкет\n").toUtf8());
+    auto r = CsvLoader::loadBytes(
+        QString::fromUtf8("宴会を開く,えんかいをひらく,банкет\n").toUtf8());
     QVERIFY(r.ok());
-    QCOMPARE(r.deck.cards()[0].front, QString::fromUtf8("宴会"));
-    QCOMPARE(r.deck.cards()[0].back,  QString::fromUtf8("банкет"));
+    QCOMPARE(r.deck.cards()[0].word,        QString::fromUtf8("宴会を開く"));
+    QCOMPARE(r.deck.cards()[0].furigana,    QString::fromUtf8("えんかいをひらく"));
+    QCOMPARE(r.deck.cards()[0].translation, QString::fromUtf8("банкет"));
 }
 
 QTEST_GUILESS_MAIN(TestCsvLoader)

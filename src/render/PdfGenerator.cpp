@@ -109,6 +109,17 @@ void renderOneCell(QPainter& painter, QPaintDevice* device,
     painter.restore();
 }
 
+// Build the HTML fragment fed into a cell's QTextDocument from clean fields.
+// CSV no longer carries any markup — these are the only tags ever rendered.
+QString frontHtml(const Card& card) {
+    if (card.furigana.isEmpty()) return card.word.toHtmlEscaped();
+    return QStringLiteral("%1<br><span class='furigana'>%2</span>")
+        .arg(card.word.toHtmlEscaped(), card.furigana.toHtmlEscaped());
+}
+QString backHtml(const Card& card) {
+    return card.translation.toHtmlEscaped();
+}
+
 void renderPage(QPainter& painter, QPaintDevice* device,
                 const QVector<Card>& cards, int pageStartIdx,
                 bool isBack, const PdfGenerator::Options& opts)
@@ -125,7 +136,7 @@ void renderPage(QPainter& painter, QPaintDevice* device,
             const int sourceCol = isBack ? (kCols - 1 - col) : col;
             const int idx = pageStartIdx + row * kCols + sourceCol;
             const Card& card = cards[idx];
-            const QString html = isBack ? card.back : card.front;
+            const QString html = isBack ? backHtml(card) : frontHtml(card);
 
             const QRectF cellRect(
                 margin + col * cellW,

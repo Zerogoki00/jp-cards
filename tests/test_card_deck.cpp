@@ -15,7 +15,8 @@ private slots:
 namespace {
 CardDeck make(int n) {
     CardDeck d;
-    for (int i = 0; i < n; ++i) d.append(Card{QStringLiteral("f"), QStringLiteral("b")});
+    for (int i = 0; i < n; ++i)
+        d.append(Card{QStringLiteral("w"), QStringLiteral("f"), QStringLiteral("t")});
     return d;
 }
 }

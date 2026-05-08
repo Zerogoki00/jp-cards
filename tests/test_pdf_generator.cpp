@@ -25,7 +25,7 @@ void TestPdfGenerator::rejectsEmptyDeck() {
 
 void TestPdfGenerator::smokeProducesParsablePdf() {
     CardDeck d;
-    d.append(Card{QStringLiteral("hello"), QStringLiteral("world")});
+    d.append(Card{QStringLiteral("hello"), QString(), QStringLiteral("world")});
 
     QTemporaryFile out("XXXXXX.pdf");
     QVERIFY(out.open());
@@ -50,7 +50,7 @@ void TestPdfGenerator::smokeProducesParsablePdf() {
 void TestPdfGenerator::pageCountMatchesPaddedDeck() {
     CardDeck d;
     for (int i = 0; i < 19; ++i) {
-        d.append(Card{QStringLiteral("a"), QStringLiteral("b")});
+        d.append(Card{QStringLiteral("a"), QString(), QStringLiteral("b")});
     }
     QTemporaryFile out("XXXXXX.pdf");
     QVERIFY(out.open());

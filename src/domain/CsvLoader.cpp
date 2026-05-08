@@ -128,14 +128,15 @@ CsvLoader::Result CsvLoader::loadBytes(const QByteArray& data) {
         if (row.isEmpty() || (row.size() == 1 && row.first().isEmpty())) {
             continue;
         }
-        if (row.size() < 2) {
-            r.warnings.append(QStringLiteral("Row %1 skipped: needs 2 columns, got %2.")
+        if (row.size() < 3) {
+            r.warnings.append(QStringLiteral("Row %1 skipped: needs 3 columns, got %2.")
                                   .arg(rowNum).arg(row.size()));
             continue;
         }
-        Card card{ row[0], row[1] };
+        Card card{ row[0], row[1], row[2] };
         if (card.isEmpty()) {
-            r.warnings.append(QStringLiteral("Row %1 skipped: both columns empty.").arg(rowNum));
+            r.warnings.append(QStringLiteral("Row %1 skipped: word and translation are empty.")
+                                  .arg(rowNum));
             continue;
         }
         r.deck.append(card);

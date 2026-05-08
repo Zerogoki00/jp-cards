@@ -30,7 +30,7 @@ void buildFourPageDocument(FlashcardsController& c) {
     // 19 cards → padded to 36 → 2 logical → 4 PDF pages.
     QByteArray data;
     for (int i = 0; i < 19; ++i) {
-        data += QString::fromUtf8("front%1,back%1\n").arg(i).toUtf8();
+        data += QString::fromUtf8("word%1,,trans%1\n").arg(i).toUtf8();
     }
     csv.write(data);
     csv.flush();

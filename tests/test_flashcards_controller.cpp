@@ -15,7 +15,8 @@ private slots:
 void TestFlashcardsController::loadValidCsv() {
     QTemporaryFile csv("XXXXXX.csv");
     QVERIFY(csv.open());
-    csv.write(QString::fromUtf8("宴会,банкет\n飲み会,попойка\n").toUtf8());
+    csv.write(QString::fromUtf8(
+        "宴会,えんかい,банкет\n飲み会,のみかい,попойка\n").toUtf8());
     csv.flush();
     const QString path = csv.fileName();
     csv.close();

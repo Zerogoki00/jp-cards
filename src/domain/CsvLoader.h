@@ -14,7 +14,8 @@ public:
         bool ok() const { return error.isEmpty(); }
     };
 
-    // Loads a CSV file from disk. Expected format: 2 columns (front, back).
+    // Loads a CSV file from disk. Expected format: 3 columns
+    // (word, furigana, translation). Furigana column may be empty.
     // Encoding: UTF-8, with or without BOM.
     static Result loadFile(const QString& path);
 
