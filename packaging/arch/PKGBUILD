@@ -1,6 +1,6 @@
 # Maintainer: Zerogoki00 <ayanami@nerv.un.org>
 pkgname=jp-cards
-pkgver=0.2.0
+pkgver=0.2.1
 pkgrel=1
 pkgdesc="Qt 6 desktop app that turns a CSV vocabulary list into a print-ready PDF of double-sided Japanese flashcards"
 arch=('x86_64')
