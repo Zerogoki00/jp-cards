@@ -4,6 +4,7 @@
 #include <QFile>
 #include <QFont>
 #include <QMarginsF>
+#include <QPageLayout>
 #include <QPageSize>
 #include <QPainter>
 #include <QPdfWriter>
@@ -159,9 +160,17 @@ PdfGenerator::Result PdfGenerator::generate(const CardDeck& deckIn,
     if (deck.size() % CardDeck::kCardsPerPage != 0) deck.pad();
 
     QPdfWriter writer(device);
-    writer.setPageSize(QPageSize(QPageSize::A4));
-    writer.setPageMargins(QMarginsF(0, 0, 0, 0));
     writer.setResolution(opts.resolutionDpi);
+    // setPageMargins(0,0,0,0) alone isn't enough — QPdfWriter inherits a
+    // non-zero minimumMargins from the default page layout, which silently
+    // raises requested margins and shifts the painter origin (visible as a
+    // grid shifted to the right/bottom). Build the layout from scratch.
+    QPageLayout layout(QPageSize(QPageSize::A4),
+                       QPageLayout::Portrait,
+                       QMarginsF(0, 0, 0, 0),
+                       QPageLayout::Millimeter);
+    layout.setMinimumMargins(QMarginsF(0, 0, 0, 0));
+    writer.setPageLayout(layout);
     writer.setTitle(QStringLiteral("Flashcards"));
 
     QPainter painter;
