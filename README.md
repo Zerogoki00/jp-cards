@@ -149,22 +149,3 @@ The furigana column may be left empty.
 
 Empty rows are skipped silently. Rows with fewer than three columns are
 skipped with a warning in the log.
-
-## Project layout
-
-```
-src/
-  main.cpp           — entry point + CLI parser
-  ui/MainWindow      — toolbar, QPdfView, log pane
-  app/
-    FlashcardsController — orchestrates CSV → deck → PDF → preview
-    PrintController      — drives QPrintDialog and page rasterisation
-  domain/
-    Card, CardDeck, CsvLoader
-  render/
-    FontProvider     — resolves a CJK font family
-    PdfGenerator     — QPdfWriter + QPainter + QTextDocument
-resources/
-  fonts/             — bundled NotoSansJP-Regular (build-time, not in git)
-tests/               — Qt Test
-```
