@@ -8,6 +8,10 @@ into a print-ready PDF of double-sided flashcards.
 - **CSV input** — three columns (`word, furigana, translation`), UTF-8
   with or without BOM, RFC 4180 quoting (commas, embedded newlines,
   escaped quotes). The furigana column may be empty.
+- **Card editor** (`Ctrl + E`) — modal dialog with an inline-editable
+  table of all cards. Add, remove, reorder (Move Up / Move Down), and edit
+  any field; on accept the preview re-renders against the new deck. Works
+  with or without a CSV — start from scratch, or tweak an imported deck.
 - **3 × 6 grid on A4** — 18 cards per logical page, 10 mm page margins,
   3 mm cell padding. Dashed cut guides on every cell.
 - **Auto-fit text** — main font shrinks from 14 pt down to 8 pt to keep
@@ -115,6 +119,7 @@ to write the result. Keyboard shortcuts:
 | Action         | Shortcut    |
 |----------------|-------------|
 | Open CSV       | Ctrl + O    |
+| Card editor    | Ctrl + E    |
 | Save PDF       | Ctrl + S    |
 | Zoom in        | Ctrl + +    |
 | Zoom out       | Ctrl + −    |

@@ -43,6 +43,8 @@ set(APP_RENDER_SOURCES
 set(APP_UI_SOURCES
     src/ui/MainWindow.h
     src/ui/MainWindow.cpp
+    src/ui/CardEditorDialog.h
+    src/ui/CardEditorDialog.cpp
 )
 
 set(APP_APP_SOURCES

@@ -17,6 +17,7 @@ public:
 
 private slots:
     void onOpenCsv();
+    void onCardEditor();
     void onSavePdf();
     void onPrintAll();
     void onPrintOdd();
@@ -44,8 +45,9 @@ private:
     QString lastSaveDir() const;
     void    setLastSaveDir(const QString& dir);
 
-    QAction* m_openAction      = nullptr;
-    QAction* m_saveAction      = nullptr;
+    QAction* m_openAction       = nullptr;
+    QAction* m_cardEditorAction = nullptr;
+    QAction* m_saveAction       = nullptr;
     QAction* m_printAllAction  = nullptr;
     QAction* m_printOddAction  = nullptr;
     QAction* m_printEvenAction = nullptr;

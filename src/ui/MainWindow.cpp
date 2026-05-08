@@ -1,7 +1,9 @@
 #include "MainWindow.h"
 
+#include "CardEditorDialog.h"
 #include "app/FlashcardsController.h"
 #include "app/PrintController.h"
+#include "domain/CardDeck.h"
 
 #include <QAction>
 #include <QFile>
@@ -73,8 +75,9 @@ MainWindow::MainWindow(QWidget* parent)
 MainWindow::~MainWindow() = default;
 
 void MainWindow::buildActions() {
-    m_openAction      = new QAction(tr("Open CSV…"), this);
-    m_saveAction      = new QAction(tr("Save PDF…"), this);
+    m_openAction       = new QAction(tr("Open CSV…"), this);
+    m_cardEditorAction = new QAction(tr("Card Editor…"), this);
+    m_saveAction       = new QAction(tr("Save PDF…"), this);
     m_printAllAction  = new QAction(tr("Print all"), this);
     m_printOddAction  = new QAction(tr("Print odd (front)"), this);
     m_printEvenAction = new QAction(tr("Print even (back)"), this);
@@ -84,8 +87,9 @@ void MainWindow::buildActions() {
     m_prevPageAction  = new QAction(tr("◀ Page"), this);
     m_nextPageAction  = new QAction(tr("Page ▶"), this);
 
-    m_openAction    ->setShortcut(QKeySequence::Open);
-    m_saveAction    ->setShortcut(QKeySequence::Save);
+    m_openAction       ->setShortcut(QKeySequence::Open);
+    m_cardEditorAction ->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_E));
+    m_saveAction       ->setShortcut(QKeySequence::Save);
     m_printAllAction->setShortcut(QKeySequence::Print);
     m_zoomInAction  ->setShortcut(QKeySequence::ZoomIn);
     m_zoomOutAction ->setShortcut(QKeySequence::ZoomOut);
@@ -93,8 +97,9 @@ void MainWindow::buildActions() {
     m_prevPageAction->setShortcut(QKeySequence::MoveToPreviousPage);
     m_nextPageAction->setShortcut(QKeySequence::MoveToNextPage);
 
-    connect(m_openAction,      &QAction::triggered, this, &MainWindow::onOpenCsv);
-    connect(m_saveAction,      &QAction::triggered, this, &MainWindow::onSavePdf);
+    connect(m_openAction,       &QAction::triggered, this, &MainWindow::onOpenCsv);
+    connect(m_cardEditorAction, &QAction::triggered, this, &MainWindow::onCardEditor);
+    connect(m_saveAction,       &QAction::triggered, this, &MainWindow::onSavePdf);
     connect(m_printAllAction,  &QAction::triggered, this, &MainWindow::onPrintAll);
     connect(m_printOddAction,  &QAction::triggered, this, &MainWindow::onPrintOdd);
     connect(m_printEvenAction, &QAction::triggered, this, &MainWindow::onPrintEven);
@@ -111,6 +116,7 @@ void MainWindow::buildToolbar() {
     tb->setToolButtonStyle(Qt::ToolButtonTextOnly);
 
     tb->addAction(m_openAction);
+    tb->addAction(m_cardEditorAction);
     tb->addAction(m_saveAction);
     tb->addSeparator();
     tb->addAction(m_printAllAction);
@@ -165,6 +171,21 @@ void MainWindow::onOpenCsv() {
 
     setLastCsvDir(QFileInfo(chosen).absolutePath());
     m_controller->loadCsv(chosen);
+}
+
+void MainWindow::onCardEditor() {
+    CardEditorDialog dlg(m_controller->deck().cards(), this);
+    if (dlg.exec() != QDialog::Accepted) return;
+
+    const QVector<Card> edited = dlg.cards();
+    if (edited.isEmpty()) {
+        log(tr("Card editor: no cards — preview unchanged."),
+            QStringLiteral("warn"));
+        return;
+    }
+    CardDeck deck;
+    for (const Card& c : edited) deck.append(c);
+    m_controller->applyDeck(deck);
 }
 
 void MainWindow::onSavePdf() {

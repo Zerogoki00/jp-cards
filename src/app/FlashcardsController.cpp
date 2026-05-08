@@ -5,8 +5,9 @@
 #include "render/FontProvider.h"
 #include "render/PdfGenerator.h"
 
-#include <QBuffer>
 #include <QPdfDocument>
+
+#include <utility>
 
 FlashcardsController::FlashcardsController(QObject* parent)
     : QObject(parent),
@@ -33,6 +34,16 @@ void FlashcardsController::loadCsv(const QString& csvPath) {
         return;
     }
 
+    applyDeck(load.deck);
+    if (hasDocument()) m_currentCsv = csvPath;
+}
+
+void FlashcardsController::applyDeck(CardDeck deck) {
+    if (deck.isEmpty()) {
+        emit error(tr("Deck is empty — nothing to render."));
+        return;
+    }
+
     PdfGenerator::Options opts;
     if (!m_fontFamily.isEmpty()) {
         opts.fontFamily = m_fontFamily;
@@ -42,14 +53,15 @@ void FlashcardsController::loadCsv(const QString& csvPath) {
     }
 
     // QPdfDocument holds a non-owning pointer to the QIODevice; close before
-    // the buffer is reset, then re-open it after the new bytes are in place.
+    // the buffer is reset, then re-open after the new bytes are in place.
     m_document->close();
     m_pdfBuffer.close();
     m_pdfBytes.clear();
+    m_currentCsv.clear();
 
     m_pdfBuffer.setBuffer(&m_pdfBytes);
     m_pdfBuffer.open(QIODevice::WriteOnly);
-    const auto res = PdfGenerator::generate(load.deck, &m_pdfBuffer, opts);
+    const auto res = PdfGenerator::generate(deck, &m_pdfBuffer, opts);
     m_pdfBuffer.close();
     if (!res.ok) {
         emit error(res.error);
@@ -64,9 +76,9 @@ void FlashcardsController::loadCsv(const QString& csvPath) {
         return;
     }
 
-    m_currentCsv = csvPath;
+    m_deck = std::move(deck);
 
-    const int real    = load.deck.size();
+    const int real    = m_deck.size();
     const int per     = CardDeck::kCardsPerPage;
     const int padded  = ((real + per - 1) / per) * per;
     const int logical = padded / per;
