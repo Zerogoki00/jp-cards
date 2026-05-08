@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(flashcards LANGUAGES CXX VERSION 0.1.0)
+project(flashcards LANGUAGES CXX VERSION 0.2.5)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -97,6 +97,10 @@ message(STATUS "Bundled font: ${FLASHCARDS_BUNDLED_FONT_FILE}")
 qt_add_executable(flashcards
     src/main.cpp
     ${APP_UI_SOURCES}
+)
+
+target_compile_definitions(flashcards PRIVATE
+    JP_CARDS_VERSION="${PROJECT_VERSION}"
 )
 
 # Stage the font into the build tree so a relative-path .qrc can reference

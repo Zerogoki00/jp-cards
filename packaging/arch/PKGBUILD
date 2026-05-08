@@ -1,6 +1,6 @@
 # Maintainer: Zerogoki00 <ayanami@nerv.un.org>
 pkgname=jp-cards
-pkgver=0.2.3
+pkgver=0.2.5
 pkgrel=1
 pkgdesc="Qt 6 printable PDF of double-sided Japanese flashcards generator"
 arch=('x86_64')

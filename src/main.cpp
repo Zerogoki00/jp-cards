@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
 
     QCoreApplication::setOrganizationName("jp-cards");
     QCoreApplication::setApplicationName("jp-cards");
-    QCoreApplication::setApplicationVersion("0.1.0");
+    QCoreApplication::setApplicationVersion(QStringLiteral(JP_CARDS_VERSION));
 
     QCommandLineParser parser;
     parser.setApplicationDescription("Double-sided flashcard generator");

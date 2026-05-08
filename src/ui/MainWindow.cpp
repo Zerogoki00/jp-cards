@@ -6,6 +6,7 @@
 #include "domain/CardDeck.h"
 
 #include <QAction>
+#include <QDateTime>
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -191,9 +192,12 @@ void MainWindow::onCardEditor() {
 void MainWindow::onSavePdf() {
     if (!m_controller->hasDocument()) return;
 
-    const QString defaultName =
-        QFileInfo(m_controller->currentCsvPath()).completeBaseName() +
-        QStringLiteral(".pdf");
+    const QString stem = QFileInfo(m_controller->currentCsvPath()).completeBaseName();
+    const QString defaultName = (stem.isEmpty()
+            ? QStringLiteral("jp-cards-")
+                  + QDateTime::currentDateTime().toString(QStringLiteral("yyyyMMdd-hhmm"))
+            : stem)
+        + QStringLiteral(".pdf");
     const QString defaultPath = lastSaveDir() + QLatin1Char('/') + defaultName;
 
     const QString chosen = QFileDialog::getSaveFileName(
