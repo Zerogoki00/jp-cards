@@ -1,0 +1,23 @@
+# Build / out-of-source artefacts
+build/
+build-*/
+out/
+cmake-build-*/
+
+# CMake user-local overrides
+CMakeUserPresets.json
+
+# IDE — selectively allow project-level settings
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# Editor scratch
+*.swp
+*~
+
+# Bundled font (downloaded at build time, see resources/fonts/README.md)
+resources/fonts/*.otf
+resources/fonts/*.ttf
+resources/fonts/*.ttc
