@@ -5,11 +5,9 @@ into a print-ready PDF of double-sided flashcards.
 
 ## Features
 
-- **CSV input** — two columns (front, back), UTF-8 with or without BOM,
-  RFC 4180 quoting (commas, embedded newlines, escaped quotes).
-- **HTML in cells** — `<br>` for hard line breaks and
-  `<span class='furigana'>…</span>` for the small grey reading line above
-  the translation. Other HTML tags are stripped.
+- **CSV input** — three columns (`word, furigana, translation`), UTF-8
+  with or without BOM, RFC 4180 quoting (commas, embedded newlines,
+  escaped quotes). The furigana column may be empty.
 - **3 × 6 grid on A4** — 18 cards per logical page, 10 mm page margins,
   3 mm cell padding. Dashed cut guides on every cell.
 - **Auto-fit text** — main font shrinks from 14 pt down to 8 pt to keep
@@ -133,17 +131,18 @@ jp-cards --generate vocab.csv out.pdf     # → custom output path
 
 ## CSV format
 
-Two UTF-8 columns separated by commas. Either column may contain
-the supported HTML subset:
+Three UTF-8 columns separated by commas: `word, furigana, translation`.
+The furigana column may be left empty.
 
 ```csv
-宴会を開く<br><span class='furigana'>(えんかいをひらく)</span>,To throw a banquet
-飲み会<br><span class='furigana'>(のみかい)</span>,Drinking party
-"Field, with comma",Translation
-"She said ""hi""",Translation
+宴会を開く,えんかいをひらく,To throw a banquet
+飲み会,のみかい,Drinking party
+あふれる,,To overflow
+ウィスキーの水割り,ウィスキーのみずわり,"Whisky, with water"
+"She said ""hi""",,Translation
 ```
 
-Empty rows are skipped silently. Rows with fewer than two columns are
+Empty rows are skipped silently. Rows with fewer than three columns are
 skipped with a warning in the log.
 
 ## Project layout

@@ -3,8 +3,11 @@
 #include <QString>
 
 struct Card {
-    QString front;
-    QString back;
+    QString word;
+    QString furigana;     // optional reading; may be empty
+    QString translation;
 
-    bool isEmpty() const { return front.isEmpty() && back.isEmpty(); }
+    bool isEmpty() const {
+        return word.isEmpty() && translation.isEmpty();
+    }
 };
