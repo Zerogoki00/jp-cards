@@ -26,8 +26,6 @@ into a print-ready PDF of double-sided flashcards.
 - **Operation log** — skipped CSV rows, card / page counts, errors all
   surface in a panel at the bottom of the window.
 
-Print support (per-page filtering for non-duplex printers) is on the
-roadmap; the toolbar buttons are present but disabled.
 
 ## Dependencies
 
