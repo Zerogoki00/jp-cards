@@ -1,15 +1,15 @@
 # Maintainer: Zerogoki00 <ayanami@nerv.un.org>
 pkgname=jp-cards
-pkgver=0.2.1
+pkgver=0.2.2
 pkgrel=1
-pkgdesc="Qt 6 desktop app that turns a CSV vocabulary list into a print-ready PDF of double-sided Japanese flashcards"
+pkgdesc="Qt 6 printable PDF of double-sided Japanese flashcards generator"
 arch=('x86_64')
 url="https://github.com/Zerogoki00/jp-cards"
 license=('GPL-3.0-or-later' 'custom:OFL-1.1')
-depends=('qt6-base' 'qt6-pdf')
+depends=('qt6-base' 'qt6-webengine') 
 makedepends=('cmake' 'ninja')
 source=(
-    "$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/$pkgver.tar.gz"
+    "$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz"
     "NotoSansJP-Regular.otf::https://github.com/notofonts/noto-cjk/raw/main/Sans/SubsetOTF/JP/NotoSansJP-Regular.otf"
 )
 # Run `updpkgsums` after editing pkgver to refresh these.
@@ -34,6 +34,9 @@ package() {
     cd "$pkgname-$pkgver"
     install -Dm755 "build/linux-release/jp-cards" \
         "$pkgdir/usr/bin/jp-cards"
+    install -Dm644 packaging/jp-cards.desktop \
+        "$pkgdir/usr/share/applications/jp-cards.desktop"
     install -Dm644 LICENSE \
         "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }
+

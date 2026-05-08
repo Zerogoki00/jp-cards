@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=JP Cards
+GenericName=Japanese Flashcard Generator
+Comment=Printable PDF of double-sided Japanese flashcards generator
+Exec=jp-cards
+Icon=jp-cards
+Terminal=false
+Categories=Education;Languages;
+Keywords=japanese;flashcard;cards;PDF;vocabulary;
+StartupWMClass=jp-cards
