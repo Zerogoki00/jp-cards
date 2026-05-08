@@ -4,6 +4,8 @@
 
 #include <QString>
 
+class QIODevice;
+
 class PdfGenerator {
 public:
     struct Options {
@@ -29,6 +31,9 @@ public:
         QString error;
     };
 
+    static Result generate(const CardDeck& deck,
+                           QIODevice* device,
+                           const Options& opts);
     static Result generate(const CardDeck& deck,
                            const QString& outPath,
                            const Options& opts);

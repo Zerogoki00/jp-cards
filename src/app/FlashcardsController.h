@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QBuffer>
+#include <QByteArray>
 #include <QObject>
 #include <QString>
 
@@ -7,7 +9,7 @@ class QPdfDocument;
 
 // Orchestrates the CSV → CardDeck → PDF → QPdfDocument flow.
 // Owns the QPdfDocument used by the preview view; the rendered PDF is
-// kept on disk in the application cache directory and reused by Save.
+// kept in memory and reused by Save.
 class FlashcardsController : public QObject {
     Q_OBJECT
 public:
@@ -17,9 +19,9 @@ public:
     QPdfDocument* document() const { return m_document; }
 
     // Empty until a CSV has been successfully loaded.
-    QString currentCsvPath() const { return m_currentCsv; }
-    QString currentPdfPath() const { return m_currentPdf; }
-    bool    hasDocument()    const;
+    QString            currentCsvPath() const { return m_currentCsv; }
+    const QByteArray&  pdfData()        const { return m_pdfBytes; }
+    bool               hasDocument()    const;
 
 public slots:
     // Loads the given CSV, regenerates the preview PDF, swaps it into the
@@ -33,11 +35,10 @@ signals:
     void error  (const QString& message);
 
 private:
-    QString cachePdfPath() const;
-
     QPdfDocument* m_document = nullptr;
     QString       m_currentCsv;
-    QString       m_currentPdf;
+    QByteArray    m_pdfBytes;   // backing storage for m_pdfBuffer
+    QBuffer       m_pdfBuffer;  // QPdfDocument keeps a non-owning pointer to this
     QString       m_fontFamily;
     bool          m_fontWarned = false;
 };

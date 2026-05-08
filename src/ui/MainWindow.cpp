@@ -182,15 +182,18 @@ void MainWindow::onSavePdf() {
 
     setLastSaveDir(QFileInfo(chosen).absolutePath());
 
-    // Replace existing destination — QFile::copy refuses otherwise.
-    if (QFile::exists(chosen) && !QFile::remove(chosen)) {
-        log(tr("Cannot overwrite %1").arg(chosen), QStringLiteral("error"));
+    QFile out(chosen);
+    if (!out.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        log(tr("Save failed: %1 (%2)").arg(chosen, out.errorString()),
+            QStringLiteral("error"));
         QMessageBox::warning(this, tr("Save PDF"),
-                             tr("Cannot overwrite the destination file."));
+                             tr("Could not write the PDF to the chosen location."));
         return;
     }
-    if (!QFile::copy(m_controller->currentPdfPath(), chosen)) {
-        log(tr("Save failed: %1").arg(chosen), QStringLiteral("error"));
+    const QByteArray& bytes = m_controller->pdfData();
+    if (out.write(bytes) != bytes.size()) {
+        log(tr("Save failed: %1 (%2)").arg(chosen, out.errorString()),
+            QStringLiteral("error"));
         QMessageBox::warning(this, tr("Save PDF"),
                              tr("Could not write the PDF to the chosen location."));
         return;

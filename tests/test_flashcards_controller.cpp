@@ -2,28 +2,15 @@
 
 #include <QPdfDocument>
 #include <QSignalSpy>
-#include <QStandardPaths>
-#include <QTemporaryDir>
 #include <QTemporaryFile>
 #include <QtTest>
 
 class TestFlashcardsController : public QObject {
     Q_OBJECT
 private slots:
-    void initTestCase();
     void loadValidCsv();
     void loadMissingCsv();
 };
-
-void TestFlashcardsController::initTestCase() {
-    // Make sure CacheLocation lives in a sandbox so we don't pollute the
-    // user's real cache when tests run on a developer machine.
-    static QTemporaryDir tmp;
-    QVERIFY(tmp.isValid());
-    QStandardPaths::setTestModeEnabled(true);
-    QCoreApplication::setOrganizationName("flashcards-test");
-    QCoreApplication::setApplicationName("flashcards-test");
-}
 
 void TestFlashcardsController::loadValidCsv() {
     QTemporaryFile csv("XXXXXX.csv");
@@ -43,7 +30,8 @@ void TestFlashcardsController::loadValidCsv() {
     QCOMPARE(loadedSpy.count(), 1);
     QVERIFY(c.hasDocument());
     QCOMPARE(c.currentCsvPath(), path);
-    QVERIFY(!c.currentPdfPath().isEmpty());
+    QVERIFY(!c.pdfData().isEmpty());
+    QVERIFY(c.pdfData().startsWith("%PDF-"));
     // 2 real cards → padded to 18 → 1 logical → 2 PDF pages.
     QCOMPARE(c.document()->pageCount(), 2);
 }

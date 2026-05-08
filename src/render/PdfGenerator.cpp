@@ -1,6 +1,7 @@
 #include "PdfGenerator.h"
 
 #include <QAbstractTextDocumentLayout>
+#include <QFile>
 #include <QFont>
 #include <QMarginsF>
 #include <QPageSize>
@@ -138,15 +139,16 @@ void renderPage(QPainter& painter, QPaintDevice* device,
 } // namespace
 
 PdfGenerator::Result PdfGenerator::generate(const CardDeck& deckIn,
-                                            const QString& outPath,
+                                            QIODevice* device,
                                             const Options& opts)
 {
     Result r;
+    if (!device) { r.error = QStringLiteral("Null output device."); return r; }
     CardDeck deck = deckIn;
     if (deck.isEmpty()) { r.error = QStringLiteral("Empty deck."); return r; }
     if (deck.size() % CardDeck::kCardsPerPage != 0) deck.pad();
 
-    QPdfWriter writer(outPath);
+    QPdfWriter writer(device);
     writer.setPageSize(QPageSize(QPageSize::A4));
     writer.setPageMargins(QMarginsF(0, 0, 0, 0));
     writer.setResolution(opts.resolutionDpi);
@@ -154,7 +156,7 @@ PdfGenerator::Result PdfGenerator::generate(const CardDeck& deckIn,
 
     QPainter painter;
     if (!painter.begin(&writer)) {
-        r.error = QStringLiteral("QPainter::begin(QPdfWriter) failed for %1").arg(outPath);
+        r.error = QStringLiteral("QPainter::begin(QPdfWriter) failed.");
         return r;
     }
 
@@ -171,4 +173,18 @@ PdfGenerator::Result PdfGenerator::generate(const CardDeck& deckIn,
     painter.end();
     r.ok = true;
     return r;
+}
+
+PdfGenerator::Result PdfGenerator::generate(const CardDeck& deck,
+                                            const QString& outPath,
+                                            const Options& opts)
+{
+    Result r;
+    QFile f(outPath);
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        r.error = QStringLiteral("Cannot open %1 for writing: %2")
+                      .arg(outPath, f.errorString());
+        return r;
+    }
+    return generate(deck, &f, opts);
 }

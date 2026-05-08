@@ -5,9 +5,8 @@
 #include "render/FontProvider.h"
 #include "render/PdfGenerator.h"
 
-#include <QDir>
+#include <QBuffer>
 #include <QPdfDocument>
-#include <QStandardPaths>
 
 FlashcardsController::FlashcardsController(QObject* parent)
     : QObject(parent),
@@ -22,12 +21,6 @@ FlashcardsController::~FlashcardsController() {
 
 bool FlashcardsController::hasDocument() const {
     return m_document && m_document->status() == QPdfDocument::Status::Ready;
-}
-
-QString FlashcardsController::cachePdfPath() const {
-    const QString dir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
-    QDir().mkpath(dir);
-    return dir + QStringLiteral("/preview.pdf");
 }
 
 void FlashcardsController::loadCsv(const QString& csvPath) {
@@ -48,24 +41,30 @@ void FlashcardsController::loadCsv(const QString& csvPath) {
         m_fontWarned = true;
     }
 
-    const QString outPath = cachePdfPath();
-    // QPdfDocument keeps the file open on Windows; close before overwriting.
+    // QPdfDocument holds a non-owning pointer to the QIODevice; close before
+    // the buffer is reset, then re-open it after the new bytes are in place.
     m_document->close();
+    m_pdfBuffer.close();
+    m_pdfBytes.clear();
 
-    auto res = PdfGenerator::generate(load.deck, outPath, opts);
+    m_pdfBuffer.setBuffer(&m_pdfBytes);
+    m_pdfBuffer.open(QIODevice::WriteOnly);
+    const auto res = PdfGenerator::generate(load.deck, &m_pdfBuffer, opts);
+    m_pdfBuffer.close();
     if (!res.ok) {
         emit error(res.error);
         return;
     }
 
-    const auto status = m_document->load(outPath);
-    if (status != QPdfDocument::Error::None) {
-        emit error(tr("Failed to load generated PDF (status %1).").arg(int(status)));
+    m_pdfBuffer.open(QIODevice::ReadOnly);
+    m_document->load(&m_pdfBuffer);
+    if (m_document->status() != QPdfDocument::Status::Ready) {
+        emit error(tr("Failed to load generated PDF (error %1).")
+                       .arg(int(m_document->error())));
         return;
     }
 
     m_currentCsv = csvPath;
-    m_currentPdf = outPath;
 
     const int real    = load.deck.size();
     const int per     = CardDeck::kCardsPerPage;
