@@ -81,6 +81,17 @@ Available presets (all use the Ninja generator):
 | `linux-debug`     | Debug         | Enables `BUILD_TESTING=ON`  |
 | `windows-release` | Release       | MSVC + Ninja on Windows     |
 
+#### Arch Linux
+
+A ready-to-use [`PKGBUILD`](packaging/arch/PKGBUILD) is provided. Build
+and install with:
+
+```bash
+cd packaging/arch
+makepkg -si
+```
+
+
 ### Windows
 
 Run from a "x64 Native Tools Command Prompt for VS 2022" (or after invoking
