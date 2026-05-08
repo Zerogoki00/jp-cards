@@ -27,12 +27,14 @@ private slots:
     void onZoomFit();
     void onPrevPage();
     void onNextPage();
+    void onAbout();
 
     void onDocumentLoaded();
     void onPageChanged();
 
 private:
     void buildActions();
+    void buildMenu();
     void buildToolbar();
     void buildCentralLayout();
 
@@ -56,6 +58,7 @@ private:
     QAction* m_zoomFitAction   = nullptr;
     QAction* m_prevPageAction  = nullptr;
     QAction* m_nextPageAction  = nullptr;
+    QAction* m_aboutAction     = nullptr;
 
     QPdfView*       m_pdfView   = nullptr;
     QPlainTextEdit* m_logPane   = nullptr;

@@ -99,8 +99,10 @@ qt_add_executable(flashcards
     ${APP_UI_SOURCES}
 )
 
+string(TIMESTAMP JP_CARDS_BUILD_DATE "%Y-%m-%d %H:%M" UTC)
 target_compile_definitions(flashcards PRIVATE
     JP_CARDS_VERSION="${PROJECT_VERSION}"
+    JP_CARDS_BUILD_DATE="${JP_CARDS_BUILD_DATE} UTC"
 )
 
 # Stage the font into the build tree so a relative-path .qrc can reference

@@ -12,6 +12,8 @@
 #include <QFileInfo>
 #include <QKeySequence>
 #include <QLabel>
+#include <QMenu>
+#include <QMenuBar>
 #include <QMessageBox>
 #include <QPdfDocument>
 #include <QPdfPageNavigator>
@@ -42,6 +44,7 @@ MainWindow::MainWindow(QWidget* parent)
     m_printController = new PrintController(this);
 
     buildActions();
+    buildMenu();
     buildToolbar();
     buildCentralLayout();
 
@@ -87,6 +90,8 @@ void MainWindow::buildActions() {
     m_zoomFitAction   = new QAction(tr("Fit"), this);
     m_prevPageAction  = new QAction(tr("◀ Page"), this);
     m_nextPageAction  = new QAction(tr("Page ▶"), this);
+    m_aboutAction     = new QAction(tr("&About"), this);
+    m_aboutAction->setMenuRole(QAction::AboutRole);
 
     m_openAction       ->setShortcut(QKeySequence::Open);
     m_cardEditorAction ->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_E));
@@ -109,6 +114,12 @@ void MainWindow::buildActions() {
     connect(m_zoomFitAction,   &QAction::triggered, this, &MainWindow::onZoomFit);
     connect(m_prevPageAction,  &QAction::triggered, this, &MainWindow::onPrevPage);
     connect(m_nextPageAction,  &QAction::triggered, this, &MainWindow::onNextPage);
+    connect(m_aboutAction,     &QAction::triggered, this, &MainWindow::onAbout);
+}
+
+void MainWindow::buildMenu() {
+    auto* helpMenu = menuBar()->addMenu(tr("&Help"));
+    helpMenu->addAction(m_aboutAction);
 }
 
 void MainWindow::buildToolbar() {
@@ -273,6 +284,18 @@ void MainWindow::onNextPage() {
     auto* nav = m_pdfView->pageNavigator();
     const int last = m_controller->document()->pageCount() - 1;
     nav->jump(std::min(last, nav->currentPage() + 1), QPointF{}, nav->currentZoom());
+}
+
+void MainWindow::onAbout() {
+    QMessageBox::about(this, tr("About JP Cards"),
+        tr("<h3>JP Cards %1</h3>"
+           "<p>Build: %2</p>"
+           "<p>Qt %3</p>"
+           "<p><a href=\"https://github.com/Zerogoki00/jp-cards\">"
+           "github.com/Zerogoki00/jp-cards</a></p>")
+            .arg(QStringLiteral(JP_CARDS_VERSION),
+                 QStringLiteral(JP_CARDS_BUILD_DATE),
+                 QString::fromLatin1(qVersion())));
 }
 
 // ---------------------------------------------------------------------------
