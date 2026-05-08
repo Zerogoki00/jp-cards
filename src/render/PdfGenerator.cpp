@@ -104,13 +104,12 @@ void renderOneCell(QPainter& painter, QPaintDevice* device,
     painter.setClipRect(inner);
     painter.translate(inner.left(), inner.top() + yOffset);
     QAbstractTextDocumentLayout::PaintContext ctx;
+    ctx.palette.setColor(QPalette::Text, QColor(0x11, 0x11, 0x11));
     ctx.clip = QRectF(0, 0, inner.width(), inner.height() - yOffset);
     doc.documentLayout()->draw(&painter, ctx);
     painter.restore();
 }
 
-// Build the HTML fragment fed into a cell's QTextDocument from clean fields.
-// CSV no longer carries any markup — these are the only tags ever rendered.
 QString frontHtml(const Card& card) {
     if (card.furigana.isEmpty()) return card.word.toHtmlEscaped();
     return QStringLiteral("%1<br><span class='furigana'>%2</span>")
