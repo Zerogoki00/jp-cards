@@ -81,7 +81,7 @@ Available presets (all use the Ninja generator):
 | `linux-debug`     | Debug         | Enables `BUILD_TESTING=ON`  |
 | `windows-release` | Release       | MSVC + Ninja on Windows     |
 
-### Windows (not tested yet)
+### Windows
 
 Run from a "x64 Native Tools Command Prompt for VS 2022" (or after invoking
 `vcvarsall.bat x64`) so the Ninja generator can find `cl.exe`.
