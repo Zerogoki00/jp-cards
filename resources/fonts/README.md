@@ -1,15 +1,8 @@
 # Bundled font
 
-The build embeds a CJK-capable font into the binary. CMake will refuse
-to configure until this static TTF file is present here:
+CMake downloads Noto Sans JP at configure time, generates a static
+`NotoSansJP-Regular.ttf` from the upstream variable TTF with `fonttools`,
+and embeds that generated file into the binary.
 
-- `NotoSansJP-Regular.ttf`
-
-The file is intentionally not committed to the repository.
-
-Do not use the OTF build for release PDFs: on Qt-Windows builds it may be
-converted to glyph outlines instead of an embedded font subset, which can
-shift printer output.
-
-Static family:
-<https://fonts.google.com/noto/specimen/Noto+Sans+JP>
+Downloaded source:
+<https://github.com/notofonts/noto-cjk/raw/main/Sans/Variable/TTF/Subset/NotoSansJP-VF.ttf>

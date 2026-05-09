@@ -38,17 +38,14 @@ into a print-ready PDF of double-sided flashcards.
 - Qt ≥ 6.4 with the components
   `Core Gui Widgets Pdf PdfWidgets PrintSupport`
   (plus `Test` if you want to build the test suite)
-- A CJK-capable static TTF font file, **required at build time** and embedded
-  into the binary. Place this file into `resources/fonts/` before
-  running CMake:
-  - `NotoSansJP-Regular.ttf`
+- Python 3 with `fonttools` available to CMake:
+  `python -m pip install fonttools`
 
-  Download the static family from
-  <https://fonts.google.com/noto/specimen/Noto+Sans+JP>.
-
-  CMake will refuse to configure if the file is missing. See
-  [resources/fonts/README.md](resources/fonts/README.md) for download
-  alternatives.
+CMake downloads Noto Sans JP at configure time, generates a static
+`NotoSansJP-Regular.ttf` from the upstream variable TTF, and embeds that
+font into the binary. The font file is intentionally not stored in the
+repository. See [resources/fonts/README.md](resources/fonts/README.md)
+for details.
 
 There are no third-party C/C++ dependencies beyond Qt itself.
 

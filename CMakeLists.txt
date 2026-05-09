@@ -74,21 +74,69 @@ target_link_libraries(flashcards_core PUBLIC
 # release artefact has no runtime font dependency. Use the glyf-based TTF:
 # CFF/OTF embedding is unreliable on Qt-Windows PDF builds.
 set(_FLASHCARDS_FONT_DIR "${CMAKE_SOURCE_DIR}/resources/fonts")
-set(_FLASHCARDS_FONT_REGULAR_TTF "${_FLASHCARDS_FONT_DIR}/NotoSansJP-Regular.ttf")
-if(EXISTS "${_FLASHCARDS_FONT_REGULAR_TTF}")
-    set(FLASHCARDS_BUNDLED_FONT_FILE "NotoSansJP-Regular.ttf")
+set(FLASHCARDS_BUNDLED_FONT_FILE "NotoSansJP-Regular.ttf")
+set(_FLASHCARDS_FONT_SOURCE_REGULAR "${_FLASHCARDS_FONT_DIR}/${FLASHCARDS_BUNDLED_FONT_FILE}")
+set(_FLASHCARDS_FONT_DOWNLOAD_DIR "${CMAKE_BINARY_DIR}/downloaded_resources/fonts")
+set(_FLASHCARDS_FONT_GENERATED_REGULAR "${_FLASHCARDS_FONT_DOWNLOAD_DIR}/${FLASHCARDS_BUNDLED_FONT_FILE}")
+set(_FLASHCARDS_FONT_VARIABLE_TTF "${_FLASHCARDS_FONT_DOWNLOAD_DIR}/NotoSansJP-VF.ttf")
+set(_FLASHCARDS_FONT_VARIABLE_URL
+    "https://github.com/notofonts/noto-cjk/raw/main/Sans/Variable/TTF/Subset/NotoSansJP-VF.ttf"
+)
+
+if(EXISTS "${_FLASHCARDS_FONT_SOURCE_REGULAR}")
+    set(_FLASHCARDS_FONT_INPUT "${_FLASHCARDS_FONT_SOURCE_REGULAR}")
 else()
-    message(FATAL_ERROR
-        "\nRequired font file is missing:\n"
-        "  ${_FLASHCARDS_FONT_REGULAR_TTF}\n\n"
-        "Download the static family from:\n"
-        "  https://fonts.google.com/noto/specimen/Noto+Sans+JP\n\n"
-        "Then place NotoSansJP-Regular.ttf into resources/fonts/.\n"
-        "Do not use the OTF build for release PDFs: Qt-Windows may outline\n"
-        "glyphs instead of embedding a font subset.\n"
-    )
+    file(MAKE_DIRECTORY "${_FLASHCARDS_FONT_DOWNLOAD_DIR}")
+
+    if(NOT EXISTS "${_FLASHCARDS_FONT_GENERATED_REGULAR}")
+        if(NOT EXISTS "${_FLASHCARDS_FONT_VARIABLE_TTF}")
+            message(STATUS "Downloading bundled font source: ${_FLASHCARDS_FONT_VARIABLE_URL}")
+            file(DOWNLOAD
+                "${_FLASHCARDS_FONT_VARIABLE_URL}"
+                "${_FLASHCARDS_FONT_VARIABLE_TTF}"
+                STATUS _FLASHCARDS_FONT_DOWNLOAD_STATUS
+                SHOW_PROGRESS
+                TLS_VERIFY ON
+            )
+            list(GET _FLASHCARDS_FONT_DOWNLOAD_STATUS 0 _FLASHCARDS_FONT_DOWNLOAD_CODE)
+            list(GET _FLASHCARDS_FONT_DOWNLOAD_STATUS 1 _FLASHCARDS_FONT_DOWNLOAD_MESSAGE)
+            if(NOT _FLASHCARDS_FONT_DOWNLOAD_CODE EQUAL 0)
+                message(FATAL_ERROR
+                    "Failed to download Noto Sans JP TTF:\n"
+                    "  ${_FLASHCARDS_FONT_DOWNLOAD_MESSAGE}\n"
+                    "URL:\n"
+                    "  ${_FLASHCARDS_FONT_VARIABLE_URL}"
+                )
+            endif()
+        endif()
+
+        find_package(Python3 REQUIRED COMPONENTS Interpreter)
+        execute_process(
+            COMMAND
+                "${Python3_EXECUTABLE}" -m fontTools.varLib.instancer
+                "${_FLASHCARDS_FONT_VARIABLE_TTF}"
+                wght=400
+                --static
+                --update-name-table
+                --output "${_FLASHCARDS_FONT_GENERATED_REGULAR}"
+            RESULT_VARIABLE _FLASHCARDS_FONTTOOLS_RESULT
+            OUTPUT_VARIABLE _FLASHCARDS_FONTTOOLS_OUTPUT
+            ERROR_VARIABLE _FLASHCARDS_FONTTOOLS_ERROR
+        )
+        if(NOT _FLASHCARDS_FONTTOOLS_RESULT EQUAL 0)
+            message(FATAL_ERROR
+                "Failed to generate NotoSansJP-Regular.ttf from the downloaded VF TTF.\n"
+                "Install Python fonttools, then rerun CMake:\n"
+                "  python -m pip install fonttools\n\n"
+                "fonttools stdout:\n${_FLASHCARDS_FONTTOOLS_OUTPUT}\n"
+                "fonttools stderr:\n${_FLASHCARDS_FONTTOOLS_ERROR}"
+            )
+        endif()
+    endif()
+
+    set(_FLASHCARDS_FONT_INPUT "${_FLASHCARDS_FONT_GENERATED_REGULAR}")
 endif()
-message(STATUS "Bundled font: ${FLASHCARDS_BUNDLED_FONT_FILE}")
+message(STATUS "Bundled font: ${FLASHCARDS_BUNDLED_FONT_FILE} (${_FLASHCARDS_FONT_INPUT})")
 
 function(flashcards_add_bundled_font_resource target)
     qt_add_resources(${target} "bundled_font"
@@ -100,7 +148,7 @@ endfunction()
 
 set(_FLASHCARDS_FONT_STAGED "${CMAKE_BINARY_DIR}/staged_resources/fonts/${FLASHCARDS_BUNDLED_FONT_FILE}")
 configure_file(
-    "${_FLASHCARDS_FONT_DIR}/${FLASHCARDS_BUNDLED_FONT_FILE}"
+    "${_FLASHCARDS_FONT_INPUT}"
     "${_FLASHCARDS_FONT_STAGED}"
     COPYONLY
 )
