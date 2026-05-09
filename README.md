@@ -38,17 +38,13 @@ into a print-ready PDF of double-sided flashcards.
 - Qt ≥ 6.4 with the components
   `Core Gui Widgets Pdf PdfWidgets PrintSupport`
   (plus `Test` if you want to build the test suite)
-- A CJK-capable font file, **required at build time** and embedded
-  into the binary. Place either of these into `resources/fonts/` before
+- A CJK-capable static TTF font file, **required at build time** and embedded
+  into the binary. Place this file into `resources/fonts/` before
   running CMake:
-  - `NotoSansJP-Regular.otf` (preferred)
   - `NotoSansJP-Regular.ttf`
 
-  One-liner:
-  ```bash
-  curl -L -o resources/fonts/NotoSansJP-Regular.otf \
-    https://github.com/notofonts/noto-cjk/raw/main/Sans/SubsetOTF/JP/NotoSansJP-Regular.otf
-  ```
+  Download the static family from
+  <https://fonts.google.com/noto/specimen/Noto+Sans+JP>.
 
   CMake will refuse to configure if the file is missing. See
   [resources/fonts/README.md](resources/fonts/README.md) for download
@@ -56,10 +52,8 @@ into a print-ready PDF of double-sided flashcards.
 
 There are no third-party C/C++ dependencies beyond Qt itself.
 
-At runtime the bundled font is loaded directly from the binary; an
-optional `$FLASHCARDS_FONT_PATH` environment variable lets you override
-it with any TTF / OTF on disk. If both are unavailable the resolver
-falls back to a system CJK font.
+At runtime the bundled font is loaded directly from the binary. The app
+does not use external font paths or system-font fallback.
 
 ## Build
 

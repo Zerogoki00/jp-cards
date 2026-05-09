@@ -7,13 +7,7 @@ public:
     // Resolves a font family suitable for rendering Japanese (kanji + kana)
     // and the surrounding Cyrillic / Latin text in the cells.
     //
-    // Resolution order:
-    //   1. $FLASHCARDS_FONT_PATH if it points to an existing TTF/OTF file —
-    //      registered in QFontDatabase via addApplicationFont, the resulting
-    //      family is returned.
-    //   2. Bundled Qt resource :/fonts/NotoSansCJK-Regular.ttf, if present.
-    //   3. First family from a curated list of system CJK fonts that exists
-    //      in QFontDatabase::families().
+    // The font must be the bundled Qt resource embedded at build time.
     //
     // Returns an empty string if nothing usable is found; callers may then
     // surface installHint() to the user.

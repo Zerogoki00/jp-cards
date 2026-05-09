@@ -71,52 +71,50 @@ target_link_libraries(flashcards_core PUBLIC
 )
 
 # Bundled CJK font: required at build time, embedded into the binary so the
-# release artefact has no runtime font dependency. Accept either .otf
-# (upstream Noto distribution) or .ttf (Google Fonts download).
+# release artefact has no runtime font dependency. Use the glyf-based TTF:
+# CFF/OTF embedding is unreliable on Qt-Windows PDF builds.
 set(_FLASHCARDS_FONT_DIR "${CMAKE_SOURCE_DIR}/resources/fonts")
-set(_FLASHCARDS_FONT_OTF "${_FLASHCARDS_FONT_DIR}/NotoSansJP-Regular.otf")
-set(_FLASHCARDS_FONT_TTF "${_FLASHCARDS_FONT_DIR}/NotoSansJP-Regular.ttf")
-if(EXISTS "${_FLASHCARDS_FONT_OTF}")
-    set(FLASHCARDS_BUNDLED_FONT_FILE "NotoSansJP-Regular.otf")
-elseif(EXISTS "${_FLASHCARDS_FONT_TTF}")
+set(_FLASHCARDS_FONT_REGULAR_TTF "${_FLASHCARDS_FONT_DIR}/NotoSansJP-Regular.ttf")
+if(EXISTS "${_FLASHCARDS_FONT_REGULAR_TTF}")
     set(FLASHCARDS_BUNDLED_FONT_FILE "NotoSansJP-Regular.ttf")
 else()
     message(FATAL_ERROR
         "\nRequired font file is missing:\n"
-        "  ${_FLASHCARDS_FONT_OTF}\n"
-        "  (or NotoSansJP-Regular.ttf in the same directory)\n\n"
-        "Download Noto Sans JP Regular before building. One-liner:\n"
-        "  curl -L -o resources/fonts/NotoSansJP-Regular.otf \\\n"
-        "    https://github.com/notofonts/noto-cjk/raw/main/Sans/SubsetOTF/JP/NotoSansJP-Regular.otf\n\n"
-        "Or download the family from https://fonts.google.com/noto/specimen/Noto+Sans+JP\n"
-        "and place NotoSansJP-Regular.ttf into resources/fonts/.\n"
+        "  ${_FLASHCARDS_FONT_REGULAR_TTF}\n\n"
+        "Download the static family from:\n"
+        "  https://fonts.google.com/noto/specimen/Noto+Sans+JP\n\n"
+        "Then place NotoSansJP-Regular.ttf into resources/fonts/.\n"
+        "Do not use the OTF build for release PDFs: Qt-Windows may outline\n"
+        "glyphs instead of embedding a font subset.\n"
     )
 endif()
 message(STATUS "Bundled font: ${FLASHCARDS_BUNDLED_FONT_FILE}")
 
-qt_add_executable(flashcards
-    src/main.cpp
-    ${APP_UI_SOURCES}
-)
+function(flashcards_add_bundled_font_resource target)
+    qt_add_resources(${target} "bundled_font"
+        PREFIX "/fonts"
+        BASE "${CMAKE_BINARY_DIR}/staged_resources/fonts"
+        FILES "${_FLASHCARDS_FONT_STAGED}"
+    )
+endfunction()
 
-string(TIMESTAMP JP_CARDS_BUILD_DATE "%Y-%m-%d %H:%M" UTC)
-target_compile_definitions(flashcards PRIVATE
-    JP_CARDS_VERSION="${PROJECT_VERSION}"
-    JP_CARDS_BUILD_DATE="${JP_CARDS_BUILD_DATE} UTC"
-)
-
-# Stage the font into the build tree so a relative-path .qrc can reference
-# it portably; AUTORCC + qt_add_resources both accept that without fuss.
 set(_FLASHCARDS_FONT_STAGED "${CMAKE_BINARY_DIR}/staged_resources/fonts/${FLASHCARDS_BUNDLED_FONT_FILE}")
 configure_file(
     "${_FLASHCARDS_FONT_DIR}/${FLASHCARDS_BUNDLED_FONT_FILE}"
     "${_FLASHCARDS_FONT_STAGED}"
     COPYONLY
 )
-qt_add_resources(flashcards "bundled_font"
-    PREFIX "/fonts"
-    BASE "${CMAKE_BINARY_DIR}/staged_resources/fonts"
-    FILES "${_FLASHCARDS_FONT_STAGED}"
+
+qt_add_executable(flashcards
+    src/main.cpp
+    ${APP_UI_SOURCES}
+)
+flashcards_add_bundled_font_resource(flashcards)
+
+string(TIMESTAMP JP_CARDS_BUILD_DATE "%Y-%m-%d %H:%M" UTC)
+target_compile_definitions(flashcards PRIVATE
+    JP_CARDS_VERSION="${PROJECT_VERSION}"
+    JP_CARDS_BUILD_DATE="${JP_CARDS_BUILD_DATE} UTC"
 )
 
 target_include_directories(flashcards PRIVATE src)

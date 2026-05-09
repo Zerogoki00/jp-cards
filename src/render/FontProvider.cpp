@@ -1,12 +1,10 @@
 #include "FontProvider.h"
 
-#include <QByteArray>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
 #include <QFontDatabase>
 #include <QList>
-#include <QStandardPaths>
 #include <QString>
 #include <QStringList>
 #include <QTemporaryFile>
@@ -54,48 +52,24 @@ QString registerAndPickFamily(const QString& path) {
     const int id = QFontDatabase::addApplicationFont(path);
     if (id < 0) return {};
     const QStringList families = QFontDatabase::applicationFontFamilies(id);
-    return families.isEmpty() ? QString() : families.first();
-}
-
-QString pickInstalledFamily() {
-    static const QStringList kCandidates = {
-        QStringLiteral("Noto Sans CJK JP"),
-        QStringLiteral("Noto Sans JP"),
-        QStringLiteral("Source Han Sans JP"),
-        QStringLiteral("Source Han Sans"),
-        QStringLiteral("Yu Gothic"),
-        QStringLiteral("Meiryo"),
-        QStringLiteral("MS Gothic"),
-        QStringLiteral("IPAGothic"),
-        QStringLiteral("TakaoGothic"),
-        QStringLiteral("Sazanami Gothic"),
-    };
-    const QStringList installed = QFontDatabase::families();
-    for (const QString& name : kCandidates) {
-        if (installed.contains(name)) return name;
+    if (families.isEmpty()) return {};
+    for (const QString& family : families) {
+        if (family == QStringLiteral("Noto Sans JP")) return family;
     }
-    return {};
+    for (const QString& family : families) {
+        if (family.contains(QStringLiteral("Regular"))) return family;
+    }
+    return families.first();
 }
 
 } // namespace
 
 QString FontProvider::resolveFamily() {
-    const QByteArray envPath = qgetenv("FLASHCARDS_FONT_PATH");
-    if (!envPath.isEmpty()) {
-        const QString p = QString::fromLocal8Bit(envPath);
-        if (QFileInfo::exists(p)) {
-            const QString family = registerAndPickFamily(p);
-            if (!family.isEmpty()) return family;
-        }
-    }
-
-    // Bundled into the executable at build time (see CMakeLists.txt). Either
-    // format may be present depending on which mirror was used to download it.
-    // TTF is tried first: glyf-based fonts embed reliably in Qt PDF on every
-    // platform; CFF/OTF embedding is unreliable on Qt-Windows builds.
+    // Bundled into the executable at build time (see CMakeLists.txt). Use TTF:
+    // glyf-based fonts embed reliably in Qt PDF on every platform, while
+    // CFF/OTF embedding is unreliable on Qt-Windows builds.
     static const QStringList kResourceCandidates = {
         QStringLiteral(":/fonts/NotoSansJP-Regular.ttf"),
-        QStringLiteral(":/fonts/NotoSansJP-Regular.otf"),
     };
     for (const QString& resPath : kResourceCandidates) {
         if (!QFileInfo::exists(resPath)) continue;
@@ -105,16 +79,12 @@ QString FontProvider::resolveFamily() {
         if (!family.isEmpty()) return family;
     }
 
-    return pickInstalledFamily();
+    return {};
 }
 
 QString FontProvider::installHint() {
     return QStringLiteral(
-        "CJK font not found. Install one of:\n"
-        "  Arch:   sudo pacman -S noto-fonts-cjk\n"
-        "  Debian: sudo apt install fonts-noto-cjk\n"
-        "  Fedora: sudo dnf install google-noto-sans-cjk-fonts\n"
-        "Or place NotoSansJP-Regular.ttf at resources/fonts/ and rebuild,\n"
-        "or set FLASHCARDS_FONT_PATH to a TTF/OTF file."
+        "Bundled CJK font not found. Place NotoSansJP-Regular.ttf at "
+        "resources/fonts/ and rebuild."
     );
 }

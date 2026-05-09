@@ -2,6 +2,7 @@ find_package(Qt6 REQUIRED COMPONENTS Test Pdf)
 
 function(flashcards_add_test name)
     qt_add_executable(${name} ${name}.cpp)
+    flashcards_add_bundled_font_resource(${name})
     target_link_libraries(${name} PRIVATE flashcards_core Qt6::Test ${ARGN})
     add_test(NAME ${name} COMMAND ${name})
     set_tests_properties(${name} PROPERTIES

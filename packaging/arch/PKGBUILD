@@ -1,16 +1,16 @@
 # Maintainer: Zerogoki00 <ayanami@nerv.un.org>
 pkgname=jp-cards
-pkgver=0.2.8
+pkgver=0.2.9
 pkgrel=1
 pkgdesc="Qt 6 printable PDF of double-sided Japanese flashcards generator"
 arch=('x86_64')
 url="https://github.com/Zerogoki00/jp-cards"
 license=('GPL-3.0-or-later' 'custom:OFL-1.1')
 depends=('qt6-base' 'qt6-webengine') 
-makedepends=('cmake' 'ninja')
+makedepends=('cmake' 'ninja' 'python-fonttools')
 source=(
     "$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz"
-    "NotoSansJP-Regular.otf::https://github.com/notofonts/noto-cjk/raw/main/Sans/SubsetOTF/JP/NotoSansJP-Regular.otf"
+    "NotoSansJP-VF.ttf::https://github.com/notofonts/noto-cjk/raw/main/Sans/Variable/TTF/Subset/NotoSansJP-VF.ttf"
 )
 # Run `updpkgsums` after editing pkgver to refresh these.
 sha256sums=('SKIP'
@@ -18,8 +18,9 @@ sha256sums=('SKIP'
 
 prepare() {
     # CMake hard-fails without the bundled font; stage it before configure.
-    install -Dm644 "$srcdir/NotoSansJP-Regular.otf" \
-        "$srcdir/$pkgname-$pkgver/resources/fonts/NotoSansJP-Regular.otf"
+    fonttools varLib.instancer "$srcdir/NotoSansJP-VF.ttf" wght=400 \
+        --static --update-name-table \
+        --output "$srcdir/$pkgname-$pkgver/resources/fonts/NotoSansJP-Regular.ttf"
 }
 
 build() {
