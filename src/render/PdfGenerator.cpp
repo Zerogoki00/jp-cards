@@ -59,7 +59,9 @@ void configureDocument(QTextDocument& doc, QPaintDevice* device,
 
 void renderOneCell(QPainter& painter, QPaintDevice* device,
                    const QString& html, const QRectF& cellRect,
-                   const PdfGenerator::Options& opts)
+                   const PdfGenerator::Options& opts,
+                   double mainFontSizeMaxPt,
+                   double mainFontSizeMinPt)
 {
     if (opts.drawCellBorder) {
         QPen pen(QColor(170, 170, 170));
@@ -81,8 +83,8 @@ void renderOneCell(QPainter& painter, QPaintDevice* device,
 
     // Auto-fit: shrink main size 1pt at a time until the rendered block fits.
     QTextDocument doc;
-    double chosenMain = opts.mainFontSizeMinPt;
-    for (double sz = opts.mainFontSizeMaxPt; sz >= opts.mainFontSizeMinPt; sz -= 1.0) {
+    double chosenMain = mainFontSizeMinPt;
+    for (double sz = mainFontSizeMaxPt; sz >= mainFontSizeMinPt; sz -= 1.0) {
         const double furi = std::max(kMinFurigPt, sz * kFurigToMain);
         configureDocument(doc, device, opts.fontFamily, sz, furi, opts.lineSpacing,
                           inner.width(), html);
@@ -142,7 +144,11 @@ void renderPage(QPainter& painter, QPaintDevice* device,
                 margin + col * cellW,
                 margin + row * cellH,
                 cellW, cellH);
-            renderOneCell(painter, device, html, cellRect, opts);
+            const double maxPt = (!isBack && opts.frontFontSizePt > 0.0)
+                ? opts.frontFontSizePt
+                : opts.mainFontSizeMaxPt;
+            const double minPt = std::min(opts.mainFontSizeMinPt, maxPt);
+            renderOneCell(painter, device, html, cellRect, opts, maxPt, minPt);
         }
     }
 }

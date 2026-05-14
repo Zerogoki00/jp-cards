@@ -7,7 +7,13 @@
 
 #include <QPdfDocument>
 
+#include <algorithm>
 #include <utility>
+
+namespace {
+constexpr double kMinFrontFontSizePt = 8.0;
+constexpr double kMaxFrontFontSizePt = 48.0;
+}
 
 FlashcardsController::FlashcardsController(QObject* parent)
     : QObject(parent),
@@ -34,20 +40,42 @@ void FlashcardsController::loadCsv(const QString& csvPath) {
         return;
     }
 
-    applyDeck(load.deck);
-    if (hasDocument()) m_currentCsv = csvPath;
+    if (renderDeck(load.deck, /*preserveCurrentCsv=*/false)) {
+        m_currentCsv = csvPath;
+    }
 }
 
 void FlashcardsController::applyDeck(CardDeck deck) {
-    if (deck.isEmpty()) {
-        emit error(tr("Deck is empty — nothing to render."));
-        return;
-    }
+    renderDeck(std::move(deck), /*preserveCurrentCsv=*/false);
+}
 
+void FlashcardsController::setFrontFontSizePt(double pointSize) {
+    const double clamped = std::clamp(pointSize, kMinFrontFontSizePt, kMaxFrontFontSizePt);
+    if (m_frontFontSizePt == clamped) return;
+
+    m_frontFontSizePt = clamped;
+    if (!m_deck.isEmpty()) {
+        renderDeck(m_deck, /*preserveCurrentCsv=*/true);
+    }
+}
+
+PdfGenerator::Options FlashcardsController::makePdfOptions() const {
     PdfGenerator::Options opts;
+    opts.frontFontSizePt = m_frontFontSizePt;
     if (!m_fontFamily.isEmpty()) {
         opts.fontFamily = m_fontFamily;
-    } else if (!m_fontWarned) {
+    }
+    return opts;
+}
+
+bool FlashcardsController::renderDeck(CardDeck deck, bool preserveCurrentCsv) {
+    if (deck.isEmpty()) {
+        emit error(tr("Deck is empty — nothing to render."));
+        return false;
+    }
+
+    PdfGenerator::Options opts = makePdfOptions();
+    if (opts.fontFamily.isEmpty() && !m_fontWarned) {
         emit warning(FontProvider::installHint());
         m_fontWarned = true;
     }
@@ -57,7 +85,9 @@ void FlashcardsController::applyDeck(CardDeck deck) {
     m_document->close();
     m_pdfBuffer.close();
     m_pdfBytes.clear();
-    m_currentCsv.clear();
+    if (!preserveCurrentCsv) {
+        m_currentCsv.clear();
+    }
 
     m_pdfBuffer.setBuffer(&m_pdfBytes);
     m_pdfBuffer.open(QIODevice::WriteOnly);
@@ -65,7 +95,7 @@ void FlashcardsController::applyDeck(CardDeck deck) {
     m_pdfBuffer.close();
     if (!res.ok) {
         emit error(res.error);
-        return;
+        return false;
     }
 
     m_pdfBuffer.open(QIODevice::ReadOnly);
@@ -73,7 +103,7 @@ void FlashcardsController::applyDeck(CardDeck deck) {
     if (m_document->status() != QPdfDocument::Status::Ready) {
         emit error(tr("Failed to load generated PDF (error %1).")
                        .arg(int(m_document->error())));
-        return;
+        return false;
     }
 
     m_deck = std::move(deck);
@@ -85,4 +115,5 @@ void FlashcardsController::applyDeck(CardDeck deck) {
     emit info(tr("Loaded %1 cards (padded to %2, %3 logical pages → %4 PDF pages).")
                   .arg(real).arg(padded).arg(logical).arg(logical * 2));
     emit documentLoaded();
+    return true;
 }

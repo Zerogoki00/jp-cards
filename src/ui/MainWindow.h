@@ -8,6 +8,7 @@ class QAction;
 class QLabel;
 class QPdfView;
 class QPlainTextEdit;
+class QSpinBox;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -46,6 +47,8 @@ private:
     void    setLastCsvDir(const QString& dir);
     QString lastSaveDir() const;
     void    setLastSaveDir(const QString& dir);
+    int     frontFontSizePt() const;
+    void    setFrontFontSizePt(int pointSize);
 
     QAction* m_openAction       = nullptr;
     QAction* m_cardEditorAction = nullptr;
@@ -59,6 +62,8 @@ private:
     QAction* m_prevPageAction  = nullptr;
     QAction* m_nextPageAction  = nullptr;
     QAction* m_aboutAction     = nullptr;
+
+    QSpinBox* m_frontFontSizeSpin = nullptr;
 
     QPdfView*       m_pdfView   = nullptr;
     QPlainTextEdit* m_logPane   = nullptr;

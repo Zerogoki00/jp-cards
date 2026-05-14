@@ -23,15 +23,21 @@
 #include <QSplitter>
 #include <QStandardPaths>
 #include <QStatusBar>
+#include <QSpinBox>
 #include <QToolBar>
+
+#include <algorithm>
 
 namespace {
 constexpr double kZoomStep = 1.25;
 constexpr double kZoomMin  = 0.25;
 constexpr double kZoomMax  = 8.0;
+constexpr int kFrontFontMinPt = 8;
+constexpr int kFrontFontMaxPt = 48;
 
 constexpr const char* kKeyCsvDir  = "lastCsvDir";
 constexpr const char* kKeySaveDir = "lastSaveDir";
+constexpr const char* kKeyFrontFontSize = "frontFontSizePt";
 }
 
 MainWindow::MainWindow(QWidget* parent)
@@ -42,6 +48,7 @@ MainWindow::MainWindow(QWidget* parent)
 
     m_controller      = new FlashcardsController(this);
     m_printController = new PrintController(this);
+    m_controller->setFrontFontSizePt(frontFontSizePt());
 
     buildActions();
     buildMenu();
@@ -140,6 +147,24 @@ void MainWindow::buildToolbar() {
     tb->addAction(m_zoomOutAction);
     tb->addAction(m_zoomInAction);
     tb->addAction(m_zoomFitAction);
+    tb->addSeparator();
+
+    auto* frontFontLabel = new QLabel(tr("Front font"), tb);
+    tb->addWidget(frontFontLabel);
+
+    m_frontFontSizeSpin = new QSpinBox(tb);
+    m_frontFontSizeSpin->setRange(kFrontFontMinPt, kFrontFontMaxPt);
+    m_frontFontSizeSpin->setValue(static_cast<int>(m_controller->frontFontSizePt()));
+    m_frontFontSizeSpin->setSuffix(tr(" pt"));
+    m_frontFontSizeSpin->setToolTip(tr("Front-side font size"));
+    m_frontFontSizeSpin->setMinimumWidth(72);
+    tb->addWidget(m_frontFontSizeSpin);
+
+    connect(m_frontFontSizeSpin, QOverload<int>::of(&QSpinBox::valueChanged),
+            this, [this](int pointSize) {
+                setFrontFontSizePt(pointSize);
+                m_controller->setFrontFontSizePt(pointSize);
+            });
 }
 
 void MainWindow::buildCentralLayout() {
@@ -364,4 +389,16 @@ QString MainWindow::lastSaveDir() const {
 }
 void MainWindow::setLastSaveDir(const QString& dir) {
     QSettings().setValue(QString::fromLatin1(kKeySaveDir), dir);
+}
+int MainWindow::frontFontSizePt() const {
+    QSettings s;
+    bool ok = false;
+    const int fallback = static_cast<int>(m_controller->frontFontSizePt());
+    const int pointSize = s.value(QString::fromLatin1(kKeyFrontFontSize), fallback)
+                              .toInt(&ok);
+    return std::clamp(ok ? pointSize : fallback, kFrontFontMinPt, kFrontFontMaxPt);
+}
+void MainWindow::setFrontFontSizePt(int pointSize) {
+    QSettings().setValue(QString::fromLatin1(kKeyFrontFontSize),
+                         std::clamp(pointSize, kFrontFontMinPt, kFrontFontMaxPt));
 }

@@ -18,6 +18,8 @@ public:
         double cellPaddingMm     = 3.0;
         double mainFontSizeMaxPt = 14.0;
         double mainFontSizeMinPt = 8.0;
+        // Preferred maximum for front-side text. <= 0 uses mainFontSizeMaxPt.
+        double frontFontSizePt   = 0.0;
         double lineSpacing       = 1.3;
         bool   drawCellBorder    = true;
 

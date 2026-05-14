@@ -67,32 +67,18 @@ bool PrintController::printTo(QPdfDocument* doc, QPrinter* printer, Mode mode) {
         emit error(tr("No printer."));
         return false;
     }
-    // The renderToPrinter() filter intersects mode-derived ranges with
-    // whatever pageRanges the caller has put on the printer, so this
-    // entry point intentionally leaves printer->pageRanges() alone —
-    // tests can pre-seed it to mimic dialog-driven user choices.
+
     if (!renderToPrinter(doc, printer, mode)) return false;
     emit printFinished(mode);
     return true;
 }
 
 bool PrintController::renderToPrinter(QPdfDocument* doc, QPrinter* printer, Mode mode) {
-    // The mode is the source of truth for Odd/Even — the print dialog can
-    // overwrite the printer's pageRanges (e.g. when the user keeps the
-    // default "All pages" radio), so we re-derive the mode filter here and
-    // intersect it with whatever range the user chose in the dialog.
     const QPageRanges modeRanges = rangesForMode(doc->pageCount(), mode);
     const QPageRanges userRanges = printer->pageRanges();
     const bool filterByMode = !modeRanges.isEmpty();
     const bool filterByUser = !userRanges.isEmpty();
 
-    // Make painter coordinates cover the full page rather than the printer's
-    // printable area. Without this, painter (0,0) is at paintRect.topLeft()
-    // — which on Windows is offset from the physical page origin by the
-    // printer's hardware margins, and our full-page image then prints with
-    // a visible right/bottom shift. FullPageMode aligns the painter with
-    // the page itself; our drawn 10mm margin stays inside the printable
-    // area on any reasonable printer.
     QPageLayout layout = printer->pageLayout();
     layout.setMode(QPageLayout::FullPageMode);
     printer->setPageLayout(layout);
